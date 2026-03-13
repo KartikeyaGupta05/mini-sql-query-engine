@@ -32,7 +32,8 @@ public class Main {
             } catch (ValidationException e) {
                 System.out.println("Validation Error: " + e.getMessage());
             } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+                System.out.println("Error: " + e.getClass().getSimpleName());
+                e.printStackTrace();
             }
         }
         scanner.close();

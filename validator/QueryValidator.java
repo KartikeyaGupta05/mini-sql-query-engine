@@ -8,6 +8,8 @@ import query.CreateTableQuery;
 import query.InsertQuery;
 import query.Query;
 import query.SelectQuery;
+import query.UpdateQuery;
+import query.DeleteQuery;
 import storage.Column;
 import storage.DataType;
 import storage.Database;
@@ -27,6 +29,10 @@ public class QueryValidator {
             validateInsertQuery((InsertQuery) query);
         } else if (query instanceof SelectQuery) {
             validateSelectQuery((SelectQuery) query);
+        } else if (query instanceof UpdateQuery) {
+            validateUpdateQuery((UpdateQuery) query);
+        } else if (query instanceof DeleteQuery) {
+            validateDeleteQuery((DeleteQuery) query);
         } else {
             throw new ValidationException("Unsupported query type");
         }
@@ -106,5 +112,63 @@ public class QueryValidator {
             }
 
         }
+    }
+
+    public void validateUpdateQuery(UpdateQuery query) throws ValidationException {
+        String tableName = query.getTableName();
+        if (!database.checkTableExists(tableName)) {
+            throw new ValidationException("Table '" + tableName + "' does not exist");
+        }
+
+        Table table = database.getTable(tableName);
+        String columnToUpdate = query.getColumnName();
+        
+        int columnIndex;
+        try {
+            columnIndex = table.getColumnIndex(columnToUpdate);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException(
+                    "Column '" + columnToUpdate + "' to update does not exist in table '" + tableName + "'");
+        }
+
+        Object newValue = query.getNewValue();
+        Column column = table.getColumns().get(columnIndex);
+        DataType expectedType = column.getType();
+
+        if (expectedType == DataType.INT && !(newValue instanceof Integer)) {
+                throw new ValidationException("Expected INT for column " + column.getName());
+            }
+            if (expectedType == DataType.STRING && !(newValue instanceof String)) {
+                throw new ValidationException("Expected STRING for column " + column.getName());
+            }
+
+        if (query.getWhereCondition() != null) {
+            String columnName = query.getWhereCondition().getColumnName();
+            try {
+                table.getColumnIndex(columnName);
+            } catch (IllegalArgumentException e) {
+                throw new ValidationException(
+                        "Column '" + columnName + "' in WHERE clause does not exist in table '" + tableName + "'");
+            }
+        }
+    }
+
+    public void validateDeleteQuery(DeleteQuery query) throws ValidationException {
+        String tableName = query.getTableName();
+        if (!database.checkTableExists(tableName)) {
+            throw new ValidationException("Table '" + tableName + "' does not exist");
+        }
+
+        Table table = database.getTable(tableName);
+
+        if (query.getWhereCondition() != null) {
+            String columnName = query.getWhereCondition().getColumnName();
+            try {
+                table.getColumnIndex(columnName);
+            } catch (IllegalArgumentException e) {
+                throw new ValidationException(
+                        "Column '" + columnName + "' in WHERE clause does not exist in table '" + tableName + "'");
+            }
+        }   
     }
 }

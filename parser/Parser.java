@@ -8,6 +8,8 @@ import query.CreateTableQuery;
 import query.InsertQuery;
 import query.Query;
 import query.SelectQuery;
+import query.UpdateQuery;
+import query.DeleteQuery;
 import storage.Column;
 import storage.DataType;
 
@@ -18,6 +20,13 @@ public class Parser {
         if (tokens.length == 0 || tokens[0].isEmpty()) {
             throw new RuntimeException("Empty query");
         }
+        for (int i = 0; i < tokens.length; i++) {
+
+            if (!tokens[i].startsWith("\"")) {
+                tokens[i] = tokens[i].toUpperCase();
+            }
+        }
+        
         String firstToken = tokens[0].toUpperCase();
 
         switch (firstToken) {
@@ -27,6 +36,10 @@ public class Parser {
                 return parseInsert(tokens);
             case "SELECT":
                 return parseSelect(tokens);
+            case "UPDATE":
+                return parseUpdate(tokens);
+            case "DELETE":
+                return parseDelete(tokens);
             default:
                 throw new RuntimeException("Unsupported query");
         }
@@ -55,7 +68,7 @@ public class Parser {
         if (tokens.length < 4 || !tokens[1].equalsIgnoreCase("TABLE")) {
             throw new RuntimeException("Invalid CREATE TABLE syntax");
         }
-        
+
         String tableName = tokens[2];
         int openParenIndex = -1;
         int closeParenIndex = -1;
@@ -200,6 +213,64 @@ public class Parser {
             whereCondition = parseCondition(tokens, whereIndex + 1);
         }
         return new SelectQuery(tableName, selectedColumns, selectAll, whereCondition);
+    }
+
+    private Query parseUpdate(String[] tokens) {
+        if (tokens.length < 6) {
+            throw new RuntimeException("Invalid UPDATE syntax");
+        }
+
+        String tableName = tokens[1];
+        int setIndex = findKeywordIndex(tokens, "SET");
+        if (setIndex == -1) {
+            throw new RuntimeException("Invalid UPDATE syntax: missing SET");
+        }
+
+        String columnName = tokens[setIndex + 1];
+
+        if (setIndex + 2 >= tokens.length || !tokens[setIndex + 2].equals("=")) {
+            throw new RuntimeException("Invalid UPDATE syntax: missing '='");
+        }
+
+        if (setIndex + 3 >= tokens.length) {
+            throw new RuntimeException("Invalid UPDATE syntax: missing value");
+        }
+
+        Object newValue = parseLiteral(tokens[setIndex + 3]);
+
+        Condition whereCondition = null;
+        int whereIndex = findKeywordIndex(tokens, "WHERE");
+        if (whereIndex != -1) {
+            if (whereIndex < setIndex) {
+                throw new RuntimeException("WHERE clause appears before SET");
+            }
+            whereCondition = parseCondition(tokens, whereIndex + 1);
+        }
+
+        return new UpdateQuery(tableName, columnName, newValue, whereCondition);
+    }
+
+    private Query parseDelete(String[] tokens) {
+        if (tokens.length < 3) {
+            throw new RuntimeException("Invalid DELETE syntax");
+        }
+
+        if (!tokens[1].equalsIgnoreCase("FROM")) {
+            throw new RuntimeException("Invalid DELETE syntax: missing FROM");
+        }
+
+        String tableName = tokens[2];
+
+        Condition whereCondition = null;
+        int whereIndex = findKeywordIndex(tokens, "WHERE");
+        if (whereIndex != -1) {
+            if (whereIndex < 3) {
+                throw new RuntimeException("WHERE clause appears before table name");
+            }
+            whereCondition = parseCondition(tokens, whereIndex + 1);
+        }
+
+        return new DeleteQuery(tableName, whereCondition);
     }
 
     private Object parseLiteral(String token) {

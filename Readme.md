@@ -17,6 +17,8 @@ Supported SQL operations:
 - WHERE clause with `=` operator
 - SELECT specific columns
 - SELECT * (all columns)
+- UPDATE
+- DELETE
 
 Example queries supported:
 
@@ -30,6 +32,10 @@ INSERT INTO users VALUES (2, "Rahul", 22);
 SELECT * FROM users;
 
 SELECT name FROM users WHERE age = 20;
+
+UPDATE users SET age = 23 WHERE name = "Om";
+
+DELETE FROM users WHERE name = "Yash";
 ````
 
 ---
@@ -124,6 +130,8 @@ mini-sql-query-engine
 │   ├── CreateTableQuery.java
 │   ├── InsertQuery.java
 │   ├── SelectQuery.java
+│   ├── UpdateQuery.java
+│   ├── DeleteQuery.java
 │   └── Condition.java
 │
 ├── validator
@@ -137,6 +145,8 @@ mini-sql-query-engine
     ├── Database.java
     ├── Table.java
     └── Row.java
+    └── Column.java
+    └── DataType.java
 ```
 
 ---
@@ -240,6 +250,25 @@ SQL> SELECT name FROM users WHERE age = 20;
 
 name
 Kartikeya
+
+SQL> UPDATE users SET age = 23 WHERE name = "Om";
+
+SQL> SELECT * FROM users;
+
+id name age
+1 Kartikeya 20
+2 Rahul 24
+3 Om 23
+4 Yash 22
+
+SQL> DELETE FROM users WHERE name = "Yash";
+
+SQL> SELECT * FROM users;
+
+id name age
+1 Kartikeya 20
+2 Rahul 24
+3 Om 23
 ```
 
 ---
@@ -248,7 +277,6 @@ Kartikeya
 
 * Data stored only in memory
 * Only `=` operator supported in WHERE
-* No support for UPDATE or DELETE
 * No persistent storage
 * No indexing
 
@@ -258,7 +286,6 @@ Kartikeya
 
 Planned upgrades:
 
-* UPDATE and DELETE queries
 * ORDER BY clause
 * Disk-based storage
 * Indexing for faster queries

@@ -5,13 +5,13 @@ import java.util.List;
 
 public class SelectQuery implements Query {
     private String tableName;
-    private List<String> selectedColumn;
+    private List<String> selectedColumns;
     private boolean selectAll;
     private Condition whereCondition;
 
-    public SelectQuery(String tableName, List<String> selectedColumn, boolean selectAll, Condition whereCondition) {
+    public SelectQuery(String tableName, List<String> selectedColumns, boolean selectAll, Condition whereCondition) {
         this.tableName = tableName;
-        this.selectedColumn = selectedColumn;
+        this.selectedColumns = selectedColumns;
         this.selectAll = selectAll;
         this.whereCondition = whereCondition;
     }
@@ -21,7 +21,7 @@ public class SelectQuery implements Query {
     }
 
     public List<String> getSelectedColumns() {
-        return selectedColumn;
+        return selectedColumns;
     }
 
     public boolean isSelectAll() {

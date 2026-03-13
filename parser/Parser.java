@@ -8,6 +8,8 @@ import query.CreateTableQuery;
 import query.InsertQuery;
 import query.Query;
 import query.SelectQuery;
+import storage.Column;
+import storage.DataType;
 
 public class Parser {
     public Query parse(String input) {
@@ -53,6 +55,7 @@ public class Parser {
         if (tokens.length < 4 || !tokens[1].equalsIgnoreCase("TABLE")) {
             throw new RuntimeException("Invalid CREATE TABLE syntax");
         }
+        
         String tableName = tokens[2];
         int openParenIndex = -1;
         int closeParenIndex = -1;
@@ -67,16 +70,38 @@ public class Parser {
             throw new RuntimeException("Invalid CREATE query: missing parentheses");
         }
 
-        List<String> columnTokens = new ArrayList<>();
-        for (int i = openParenIndex + 1; i < closeParenIndex; i++) {
-            if (!tokens[i].equals(",")) {
-                columnTokens.add(tokens[i]);
+        List<Column> columns = new ArrayList<>();
+
+        int i = openParenIndex + 1;
+
+        while (i < closeParenIndex) {
+            String columnName = tokens[i];
+
+            if (i + 1 >= closeParenIndex) {
+                throw new RuntimeException("Missing datatype for column: " + columnName);
+            }
+
+            String typeToken = tokens[i + 1];
+            DataType type;
+
+            try {
+                type = DataType.valueOf(typeToken.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid datatype: " + typeToken);
+            }
+            columns.add(new Column(columnName, type));
+            i += 2;
+
+            if (i < closeParenIndex && tokens[i].equals(",")) {
+                i++;
             }
         }
-        if (columnTokens.isEmpty()) {
+
+        if (columns.isEmpty()) {
             throw new RuntimeException("CREATE TABLE must define at least one column");
         }
-        return new CreateTableQuery(tableName, columnTokens);
+
+        return new CreateTableQuery(tableName, columns);
     }
 
     private Query parseInsert(String[] tokens) {

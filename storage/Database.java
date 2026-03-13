@@ -11,12 +11,12 @@ public class Database {
         this.tables = new HashMap<>();
     }
 
-    public void createTable(String tableName, List<String> columnNames) {
+    public void createTable(String tableName, List<Column> columns) {
         if (tables.containsKey(tableName)) {
             throw new IllegalArgumentException("Table already exists: " + tableName);
         }
 
-        Table newTable = new Table(tableName, columnNames);
+        Table newTable = new Table(tableName, columns);
         tables.put(tableName, newTable);
     }
 

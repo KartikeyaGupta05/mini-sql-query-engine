@@ -6,19 +6,19 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
-
 public class Table {
     private String tableName;
-    private List<String> columnNames;
-    private Map<String, Integer> columnIndexMap; // Column name to index mapping
+    private List<Column> columns;
+    private Map<String, Integer> columnIndexMap;
     private List<Row> rows;
 
-    public Table(String tableName, List<String> columnNames) {
+    public Table(String tableName, List<Column> columns) {
         this.tableName = tableName;
-        this.columnNames = columnNames;
+        this.columns = columns;
         this.columnIndexMap = new HashMap<>();
-        for (int i = 0; i < columnNames.size(); i++) {
-            String columnName = columnNames.get(i);
+        for (int i = 0; i < columns.size(); i++) {
+            Column column = columns.get(i);
+            String columnName = column.getName();
             if (columnIndexMap.containsKey(columnName)) {
                 throw new IllegalArgumentException("Duplicate column name: " + columnName);
             }
@@ -27,19 +27,26 @@ public class Table {
         this.rows = new ArrayList<>();
     }
 
-
     public void insertRow(List<Object> values) {
-        if(values.size() != columnNames.size()) {
+        if (values.size() != columns.size()) {
             throw new IllegalArgumentException("Number of values must match number of columns");
         }
-        rows.add(new Row(values));
+        rows.add(new Row(new ArrayList<>(values)));
     }
 
     public String getTableName() {
         return tableName;
     }
 
+    public List<Column> getColumns() {
+        return Collections.unmodifiableList(columns);
+    }
+
     public List<String> getColumnNames() {
+        List<String> columnNames = new ArrayList<>();
+        for (Column column : columns) {
+            columnNames.add(column.getName());
+        }
         return Collections.unmodifiableList(columnNames);
     }
 

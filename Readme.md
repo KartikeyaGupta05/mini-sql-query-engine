@@ -21,7 +21,7 @@ Supported SQL operations:
 Example queries supported:
 
 ```sql
-CREATE TABLE users (id, name, age);
+CREATE TABLE users (id INT, name STRING, age INT);
 
 INSERT INTO users VALUES (1, "Kartik", 20);
 
@@ -218,20 +218,23 @@ exit
 ```
 Mini SQL Engine Started. Type 'exit' to quit.
 
-SQL> CREATE TABLE users (id,name,age);
+SQL> CREATE TABLE users (id INT,name STRING,age INT);
 
 SQL> INSERT INTO users VALUES (1,"Kartik",20);
 
-SQL> INSERT INTO users VALUES (2,"Rahul",22);
+SQL> INSERT INTO users VALUES (2,"Rahul",24);
 
 SQL> INSERT INTO users VALUES (3,"Om",22);
+
+SQL> INSERT INTO users VALUES (4,"Yash",22);
 
 SQL> SELECT * FROM users;
 
 id name age
 1 Kartikeya 20
-2 Rahul 22
+2 Rahul 24
 3 Om 22
+4 Yash 22
 
 SQL> SELECT name FROM users WHERE age = 20;
 
@@ -255,7 +258,6 @@ Kartikeya
 
 Planned upgrades:
 
-* Column data types (`INT`, `STRING`)
 * UPDATE and DELETE queries
 * ORDER BY clause
 * Disk-based storage

@@ -1,12 +1,15 @@
 package validator;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import query.CreateTableQuery;
 import query.InsertQuery;
 import query.Query;
 import query.SelectQuery;
+import storage.Column;
+import storage.DataType;
 import storage.Database;
 import storage.Table;
 
@@ -36,12 +39,13 @@ public class QueryValidator {
         }
 
         Set<String> seen = new HashSet<>();
-        for (String col : query.getColumnNames()) {
-            if (!seen.add(col)) {
-                throw new ValidationException("Duplicate column: " + col);
+        for (Column col : query.getColumns()) {
+            String colName = col.getName();
+            if (!seen.add(colName)) {
+                throw new ValidationException("Duplicate column: " + colName);
             }
         }
-        if (query.getColumnNames().isEmpty()) {
+        if (query.getColumns().isEmpty()) {
             throw new ValidationException("Table must have at least one column");
         }
     }
@@ -54,8 +58,22 @@ public class QueryValidator {
 
         Table table = database.getTable(tableName);
 
-        if (query.getValues().size() != table.getColumnNames().size()) {
+        List<Column> columns = table.getColumns();
+        List<Object> values = query.getValues();
+
+        if (values.size() != columns.size()) {
             throw new ValidationException("Value count does not match column count for table '" + tableName + "'");
+        }
+
+        for (int i = 0; i < columns.size(); i++) {
+            DataType expectedType = columns.get(i).getType();
+            Object value = values.get(i);
+            if (expectedType == DataType.INT && !(value instanceof Integer)) {
+                throw new ValidationException("Expected INT for column " + columns.get(i).getName());
+            }
+            if (expectedType == DataType.STRING && !(value instanceof String)) {
+                throw new ValidationException("Expected STRING for column " + columns.get(i).getName());
+            }
         }
     }
 
@@ -64,7 +82,7 @@ public class QueryValidator {
         if (!database.checkTableExists(tableName)) {
             throw new ValidationException("Table '" + tableName + "' does not exist");
         }
-        
+
         Table table = database.getTable(tableName);
 
         if (!query.isSelectAll()) {

@@ -19,7 +19,7 @@ public class QueryExecutor {
     }
 
     public void executeCreate(CreateTableQuery query) {
-        database.createTable(query.getTableName(), query.getColumnNames());
+        database.createTable(query.getTableName(), query.getColumns());
     }
 
     public void executeInsert(InsertQuery query) {
@@ -60,7 +60,7 @@ public class QueryExecutor {
         for (Row row : table.getRows()) {
             if (hasCondition) {
                 Object rowValue = row.getValue(conditionIndex);
-                if (!rowValue.equals(conditionValue)) {
+                if (!conditionValue.equals(rowValue)) {
                     continue;
                 }
             }

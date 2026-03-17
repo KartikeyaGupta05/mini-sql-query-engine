@@ -20,13 +20,7 @@ public class Parser {
         if (tokens.length == 0 || tokens[0].isEmpty()) {
             throw new RuntimeException("Empty query");
         }
-        for (int i = 0; i < tokens.length; i++) {
 
-            if (!tokens[i].startsWith("\"")) {
-                tokens[i] = tokens[i].toUpperCase();
-            }
-        }
-        
         String firstToken = tokens[0].toUpperCase();
 
         switch (firstToken) {
@@ -205,14 +199,38 @@ public class Parser {
 
         Condition whereCondition = null;
         int whereIndex = findKeywordIndex(tokens, "WHERE");
+        int orderByIndex = findKeywordIndex(tokens, "ORDER");
 
         if (whereIndex != -1) {
             if (whereIndex < fromIndex) {
                 throw new RuntimeException("WHERE clause appears before FROM");
             }
-            whereCondition = parseCondition(tokens, whereIndex + 1);
+            int conditionEnd = tokens.length;
+
+            if (orderByIndex != -1 && orderByIndex > whereIndex) {
+                conditionEnd = orderByIndex;
+            }
+            whereCondition = parseCondition(tokens, whereIndex + 1, conditionEnd);
         }
-        return new SelectQuery(tableName, selectedColumns, selectAll, whereCondition);
+
+        String orderByColumn = null;
+        boolean orderByAsc = true;
+
+        if (orderByIndex != -1 && (whereIndex == -1 || orderByIndex > whereIndex)) {
+            if (orderByIndex + 2 >= tokens.length ||
+                    !tokens[orderByIndex + 1].equalsIgnoreCase("BY")) {
+                throw new RuntimeException("Invalid ORDER BY syntax");
+            }
+            orderByColumn = tokens[orderByIndex + 2];
+            if (orderByIndex + 3 < tokens.length) {
+
+                String nextToken = tokens[orderByIndex + 3].toUpperCase();
+                if (nextToken.equals("ASC") || nextToken.equals("DESC")) {
+                    orderByAsc = nextToken.equals("ASC");
+                }
+            }
+        }
+        return new SelectQuery(tableName, selectedColumns, selectAll, whereCondition, orderByColumn, orderByAsc);
     }
 
     private Query parseUpdate(String[] tokens) {
@@ -244,7 +262,7 @@ public class Parser {
             if (whereIndex < setIndex) {
                 throw new RuntimeException("WHERE clause appears before SET");
             }
-            whereCondition = parseCondition(tokens, whereIndex + 1);
+            whereCondition = parseCondition(tokens, whereIndex + 1, tokens.length);
         }
 
         return new UpdateQuery(tableName, columnName, newValue, whereCondition);
@@ -267,7 +285,7 @@ public class Parser {
             if (whereIndex < 3) {
                 throw new RuntimeException("WHERE clause appears before table name");
             }
-            whereCondition = parseCondition(tokens, whereIndex + 1);
+            whereCondition = parseCondition(tokens, whereIndex + 1, tokens.length);
         }
 
         return new DeleteQuery(tableName, whereCondition);
@@ -309,11 +327,11 @@ public class Parser {
         return -1;
     }
 
-    private Condition parseCondition(String tokens[], int startIndex) {
-        if (tokens.length - startIndex < 3) {
+    private Condition parseCondition(String tokens[], int startIndex, int endIndex) {
+        if (endIndex - startIndex < 3) {
             throw new RuntimeException("Invalid WHERE clause");
         }
-        if (tokens.length > startIndex + 3) {
+        if (endIndex > startIndex + 3) {
             throw new RuntimeException("Invalid WHERE clause");
         }
         String columnName = tokens[startIndex];

@@ -110,7 +110,16 @@ public class QueryValidator {
                 throw new ValidationException(
                         "Column '" + column + "' in WHERE clause does not exist in table '" + tableName + "'");
             }
+        }
 
+        if (query.getOrderByColumn() != null) {
+            String column = query.getOrderByColumn();
+            try {
+                table.getColumnIndex(column);
+            } catch (IllegalArgumentException e) {
+                throw new ValidationException(
+                        "Column '" + column + "' in ORDER BY clause does not exist in table '" + tableName + "'");
+            }
         }
     }
 

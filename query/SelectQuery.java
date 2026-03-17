@@ -8,12 +8,16 @@ public class SelectQuery implements Query {
     private List<String> selectedColumns;
     private boolean selectAll;
     private Condition whereCondition;
+    private String orderByColumn;
+    private boolean orderByAsc;
 
-    public SelectQuery(String tableName, List<String> selectedColumns, boolean selectAll, Condition whereCondition) {
+    public SelectQuery(String tableName, List<String> selectedColumns, boolean selectAll, Condition whereCondition, String orderByColumn, boolean orderByAsc) {
         this.tableName = tableName;
         this.selectedColumns = selectedColumns;
         this.selectAll = selectAll;
         this.whereCondition = whereCondition;
+        this.orderByColumn = orderByColumn;
+        this.orderByAsc = orderByAsc;
     }
 
     public String getTableName() {
@@ -30,6 +34,14 @@ public class SelectQuery implements Query {
 
     public Condition getWhereCondition() {
         return whereCondition;
+    }
+
+    public String getOrderByColumn() {
+        return orderByColumn;
+    }
+
+    public boolean isOrderByAsc() {
+        return orderByAsc;
     }
 
     @Override

@@ -60,6 +60,8 @@ public class QueryExecutor {
         }
         System.out.println();
 
+        List<Row> rows = new ArrayList<>();
+
         for (Row row : table.getRows()) {
             if (hasCondition) {
                 Object rowValue = row.getValue(conditionIndex);
@@ -67,6 +69,20 @@ public class QueryExecutor {
                     continue;
                 }
             }
+            rows.add(row);
+        }
+
+        if (query.getOrderByColumn() != null) {
+            int orderByIndex = table.getColumnIndex(query.getOrderByColumn());
+                rows.sort((r1, r2) -> {
+                    Comparable v1 = (Comparable) r1.getValue(orderByIndex);
+                    Comparable v2 = (Comparable) r2.getValue(orderByIndex);
+                    int cmp = v1.compareTo(v2);
+                    return query.isOrderByAsc() ? cmp : -cmp;
+                }); 
+        }
+
+        for (Row row : rows) {
             for (int index : columnIndexes) {
                 System.out.print(row.getValue(index) + " ");
             }

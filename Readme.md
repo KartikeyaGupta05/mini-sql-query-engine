@@ -1,4 +1,3 @@
-
 # Mini SQL Query Engine
 
 A lightweight SQL query execution engine implemented in **Java** that simulates how relational databases process queries internally.
@@ -19,6 +18,7 @@ Supported SQL operations:
 - SELECT * (all columns)
 - UPDATE
 - DELETE
+- ORDER BY (ASC/DESC)
 
 Example queries supported:
 
@@ -27,7 +27,11 @@ CREATE TABLE users (id INT, name STRING, age INT);
 
 INSERT INTO users VALUES (1, "Kartik", 20);
 
-INSERT INTO users VALUES (2, "Rahul", 22);
+INSERT INTO users VALUES (2, "Rahul", 24);
+
+INSERT INTO users VALUES (3,"Om",22);
+
+INSERT INTO users VALUES (4,"Yash",22);
 
 SELECT * FROM users;
 
@@ -36,6 +40,8 @@ SELECT name FROM users WHERE age = 20;
 UPDATE users SET age = 23 WHERE name = "Om";
 
 DELETE FROM users WHERE name = "Yash";
+
+SELECT * FROM users WHERE age = 22 ORDER BY name DESC;
 ````
 
 ---
@@ -269,6 +275,12 @@ id name age
 1 Kartikeya 20
 2 Rahul 24
 3 Om 23
+
+SQL> SELECT * FROM users WHERE age = 22 ORDER BY name DESC;
+
+id name age
+4 Yash 22
+3 Om 22
 ```
 
 ---
@@ -286,7 +298,6 @@ id name age
 
 Planned upgrades:
 
-* ORDER BY clause
 * Disk-based storage
 * Indexing for faster queries
 * Query optimization

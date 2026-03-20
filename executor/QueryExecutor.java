@@ -74,12 +74,12 @@ public class QueryExecutor {
 
         if (query.getOrderByColumn() != null) {
             int orderByIndex = table.getColumnIndex(query.getOrderByColumn());
-                rows.sort((r1, r2) -> {
-                    Comparable v1 = (Comparable) r1.getValue(orderByIndex);
-                    Comparable v2 = (Comparable) r2.getValue(orderByIndex);
-                    int cmp = v1.compareTo(v2);
-                    return query.isOrderByAsc() ? cmp : -cmp;
-                }); 
+            rows.sort((r1, r2) -> {
+                Comparable v1 = (Comparable) r1.getValue(orderByIndex);
+                Comparable v2 = (Comparable) r2.getValue(orderByIndex);
+                int cmp = v1.compareTo(v2);
+                return query.isOrderByAsc() ? cmp : -cmp;
+            });
         }
 
         for (Row row : rows) {
@@ -121,6 +121,9 @@ public class QueryExecutor {
             row.setValue(columnIndex, newValue);
             updated++;
         }
+        if (updated > 0) {
+            table.rewriteFile();
+        }
         System.out.println("Updated " + updated + " row(s).");
     }
 
@@ -153,6 +156,9 @@ public class QueryExecutor {
             }
             iterator.remove();
             deleted++;
+        }
+        if (deleted > 0) {
+            table.rewriteFile();
         }
         System.out.println("Deleted " + deleted + " row(s).");
     }

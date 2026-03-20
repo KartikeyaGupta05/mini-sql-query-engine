@@ -19,13 +19,14 @@ Supported SQL operations:
 - UPDATE
 - DELETE
 - ORDER BY (ASC/DESC)
+- Persistent storage (data saved to disk)
 
 Example queries supported:
 
 ```sql
 CREATE TABLE users (id INT, name STRING, age INT);
 
-INSERT INTO users VALUES (1, "Kartik", 20);
+INSERT INTO users VALUES (1, "Kartikeya", 20);
 
 INSERT INTO users VALUES (2, "Rahul", 24);
 
@@ -41,7 +42,7 @@ UPDATE users SET age = 23 WHERE name = "Om";
 
 DELETE FROM users WHERE name = "Yash";
 
-SELECT * FROM users WHERE age = 22 ORDER BY name DESC;
+SELECT * FROM users WHERE age = 23 ORDER BY name DESC;
 ````
 
 ---
@@ -236,7 +237,7 @@ Mini SQL Engine Started. Type 'exit' to quit.
 
 SQL> CREATE TABLE users (id INT,name STRING,age INT);
 
-SQL> INSERT INTO users VALUES (1,"Kartik",20);
+SQL> INSERT INTO users VALUES (1,"Kartikeya",20);
 
 SQL> INSERT INTO users VALUES (2,"Rahul",24);
 
@@ -289,7 +290,6 @@ id name age
 
 * Data stored only in memory
 * Only `=` operator supported in WHERE
-* No persistent storage
 * No indexing
 
 ---
@@ -298,7 +298,6 @@ id name age
 
 Planned upgrades:
 
-* Disk-based storage
 * Indexing for faster queries
 * Query optimization
 

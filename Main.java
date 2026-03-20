@@ -10,10 +10,11 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        Database database = new Database();
+        Database db = new Database();
+        db.loadData();
         Parser parser = new Parser();
-        QueryValidator validator = new QueryValidator(database);
-        QueryExecutor executor = new QueryExecutor(database);
+        QueryValidator validator = new QueryValidator(db);
+        QueryExecutor executor = new QueryExecutor(db);
 
         Scanner scanner = new Scanner(System.in);
         System.out.println("Mini SQL Engine Started. Type 'exit' to quit.");

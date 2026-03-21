@@ -18,7 +18,7 @@ public class DeleteQuery implements Query {
     public Condition getWhereCondition() {
         return whereCondition;
     }
-    
+
     @Override
     public void accept(QueryExecutor executor) {
         executor.executeDelete(this);

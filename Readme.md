@@ -1,38 +1,54 @@
 # Mini SQL Query Engine
 
-A lightweight SQL query execution engine implemented in **Java** that simulates how relational databases process queries internally.
+A lightweight **SQL query execution engine built in Java** that simulates how relational databases process queries internally.
 
-This project demonstrates the **complete query processing pipeline** including parsing, validation, and execution using clean **object-oriented design principles**.
+This project demonstrates the **complete query lifecycle**:
+
+```
+Parsing → Validation → Execution → Storage → Optimization (Indexing)
+```
+
+It is designed to strengthen understanding of **DBMS internals, OOP, and system design concepts**.
 
 ---
 
-## Features
+## 🚀 Features
 
-Supported SQL operations:
+### Supported SQL Operations
 
-- CREATE TABLE
-- INSERT INTO
-- SELECT
-- WHERE clause with `=` operator
-- SELECT specific columns
-- SELECT * (all columns)
-- UPDATE
-- DELETE
-- ORDER BY (ASC/DESC)
-- Persistent storage (data saved to disk)
+* CREATE TABLE (with data types)
+* INSERT INTO
+* SELECT
 
-Example queries supported:
+  * Specific columns
+  * SELECT *
+  * WHERE clause
+  * AND / OR conditions
+  * Comparison operators (`=`, `<`, `>`)
+  * ORDER BY (ASC / DESC)
+* UPDATE
+* DELETE
+
+---
+
+### ⚡ Advanced Features
+
+* File-based persistence (data stored on disk)
+* Indexing for fast query execution
+* Index maintenance (INSERT / UPDATE / DELETE)
+* Compound conditions (AND / OR)
+* Sorting support (ORDER BY)
+
+---
+
+## 🧪 Example Queries
 
 ```sql
 CREATE TABLE users (id INT, name STRING, age INT);
 
 INSERT INTO users VALUES (1, "Kartikeya", 20);
-
 INSERT INTO users VALUES (2, "Rahul", 24);
-
-INSERT INTO users VALUES (3,"Om",22);
-
-INSERT INTO users VALUES (4,"Yash",22);
+INSERT INTO users VALUES (3, "Om", 22);
 
 SELECT * FROM users;
 
@@ -40,17 +56,18 @@ SELECT name FROM users WHERE age = 20;
 
 UPDATE users SET age = 23 WHERE name = "Om";
 
-DELETE FROM users WHERE name = "Yash";
+DELETE FROM users WHERE name = "Rahul";
 
-SELECT * FROM users WHERE age = 23 ORDER BY name DESC;
-````
+SELECT * FROM users WHERE age > 20 AND age < 25;
+
+SELECT * FROM users WHERE age = 22 ORDER BY name DESC;
+```
 
 ---
 
-# Architecture
+## 🏗️ Architecture
 
-The engine follows a modular query execution pipeline similar to real database systems.
-
+The engine follows a modular pipeline similar to real database systems:
 
 ```
                  SQL Query (User Input)
@@ -60,16 +77,12 @@ The engine follows a modular query execution pipeline similar to real database s
                         │
                         ▼
                    Parser.parse()
-            (Tokenization + Query Object)
                         │
                         ▼
                  Query Object (AST)
                         │
                         ▼
             QueryValidator.validate()
-             - table existence
-             - column validation
-             - WHERE validation
                         │
                         ▼
                QueryExecutor.execute()
@@ -84,50 +97,61 @@ The engine follows a modular query execution pipeline similar to real database s
                        Row
                         │
                         ▼
-                Filter rows (WHERE)
+                Filter (WHERE)
                         │
                         ▼
-               Project columns (SELECT)
+                Sort (ORDER BY)
                         │
                         ▼
-                 Print Result (CLI)
+               Project (SELECT)
+                        │
+                        ▼
+                 Print Result
 ```
 
 ---
 
-# Detailed Query Execution Flow
+## ⚙️ Query Execution Flow
 
-Example query:
+Example:
 
 ```sql
 SELECT name FROM users WHERE age = 20;
 ```
 
-Execution steps:
+Execution:
 
-1. **Main** reads the query from the terminal.
-2. **Parser** tokenizes the query and builds a `SelectQuery` object.
-3. **Validator** checks:
+1. **Parser**
 
-   * table existence
-   * column validity
-   * WHERE clause correctness
-4. **Executor** performs the query:
+   * Tokenizes query
+   * Builds `SelectQuery` object
 
-   * loads the table
-   * filters rows using WHERE condition
-   * projects requested columns
-5. Results are printed to the terminal.
+2. **Validator**
+
+   * Checks table existence
+   * Validates columns
+   * Validates WHERE clause
+
+3. **Executor**
+
+   * Fetches table
+   * Uses index (if available)
+   * Filters rows
+   * Sorts data
+   * Projects selected columns
+
+4. **Output**
+
+   * Printed to terminal
 
 ---
 
-# Project Structure
+## 📁 Project Structure
 
 ```
 mini-sql-query-engine
 │
-├── main
-│   └── Main.java
+├── Main.java
 │
 ├── parser
 │   └── Parser.java
@@ -148,38 +172,45 @@ mini-sql-query-engine
 ├── executor
 │   └── QueryExecutor.java
 │
-└── storage
-    ├── Database.java
-    ├── Table.java
-    └── Row.java
-    └── Column.java
-    └── DataType.java
+├── storage
+│   ├── Database.java
+│   ├── Table.java
+│   ├── Row.java
+│   ├── Column.java
+│   └── DataType.java
+│
+└── data
+    └── *.table (persisted data)
 ```
 
 ---
 
-# Design Concepts Used
+## 🧠 Indexing (Optimization)
 
-This project demonstrates several important backend and system design concepts:
+* HashMap-based indexing:
 
-* Object-Oriented Design (OOP)
-* Separation of Concerns
-* Query Parsing
-* Abstract Syntax Tree (Query Objects)
-* Validation Layer
-* Execution Engine
-* Visitor Pattern
-* In-memory storage engine
+  ```
+  Map<Column, Map<Value, List<Row>>>
+  ```
+* Used for fast lookup in:
+
+  * SELECT
+  * UPDATE
+  * DELETE
+
+### Performance Impact
+
+| Query Type | Without Index | With Index |
+| ---------- | ------------- | ---------- |
+| WHERE =    | O(n)          | O(1)       |
+| UPDATE     | O(n)          | O(k)       |
+| DELETE     | O(n)          | O(k)       |
 
 ---
 
-#Since your **`Main.java` is in the root (not inside a `main` package)** and you created a **JAR**, the README run instructions should change. Below is a **clean updated section** you can paste into your README.
+## ▶️ How to Run
 
----
-
-## How to Run
-
-### Clone the repository
+### Clone Repository
 
 ```
 git clone https://github.com/KartikeyaGupta05/mini-sql-query-engine.git
@@ -188,34 +219,15 @@ cd mini-sql-query-engine
 
 ---
 
-### Option 1: Run using JAR (Recommended)
+### 🔹 Run from Source (Recommended)
 
-Download or build the JAR file and run:
-
-```
-java -jar mini-sql-engine.jar
-```
-
-This will start the SQL engine in the terminal.
-
-Example:
-
-```
-Mini SQL Engine Started. Type 'exit' to quit.
-SQL>
-```
-
----
-
-### Option 2: Run from Source Code
-
-Compile the project:
+Compile:
 
 ```
 javac Main.java parser/*.java query/*.java storage/*.java validator/*.java executor/*.java
 ```
 
-Run the program:
+Run:
 
 ```
 java Main
@@ -223,99 +235,86 @@ java Main
 
 ---
 
-### Exit the Engine
+### 🔹 Run using JAR
+
+### Build JAR file (if not already built)
+```
+javac Main.java parser/*.java query/*.java storage/*.java validator/*.java executor/*.java
+```
+
+```
+jar cfe mini-sql-engine.jar Main *.class parser/*.class query/*.class storage/*.class validator/*.class executor/*.class
+```
+
+### Run JAR file
+```
+java -jar mini-sql-engine.jar
+```
+
+---
+
+### Exit
 
 ```
 exit
 ```
+
 ---
 
-# Example Session
+## 💻 Example Session
 
 ```
-Mini SQL Engine Started. Type 'exit' to quit.
-
 SQL> CREATE TABLE users (id INT,name STRING,age INT);
 
 SQL> INSERT INTO users VALUES (1,"Kartikeya",20);
-
-SQL> INSERT INTO users VALUES (2,"Rahul",24);
-
-SQL> INSERT INTO users VALUES (3,"Om",22);
-
-SQL> INSERT INTO users VALUES (4,"Yash",22);
 
 SQL> SELECT * FROM users;
 
 id name age
 1 Kartikeya 20
-2 Rahul 24
-3 Om 22
-4 Yash 22
 
 SQL> SELECT name FROM users WHERE age = 20;
 
 name
 Kartikeya
-
-SQL> UPDATE users SET age = 23 WHERE name = "Om";
-
-SQL> SELECT * FROM users;
-
-id name age
-1 Kartikeya 20
-2 Rahul 24
-3 Om 23
-4 Yash 22
-
-SQL> DELETE FROM users WHERE name = "Yash";
-
-SQL> SELECT * FROM users;
-
-id name age
-1 Kartikeya 20
-2 Rahul 24
-3 Om 23
-
-SQL> SELECT * FROM users WHERE age = 22 ORDER BY name DESC;
-
-id name age
-4 Yash 22
-3 Om 22
 ```
 
 ---
 
-# Current Limitations
+## ⚠️ Limitations
 
-* Data stored only in memory
-* Only `=` operator supported in WHERE
-* No indexing
-
----
-
-# Future Improvements
-
-Planned upgrades:
-
-* Indexing for faster queries
-* Query optimization
+* No JOIN support
+* No GROUP BY / Aggregation
+* No query optimizer (cost-based)
+* Limited SQL grammar
 
 ---
 
-# Learning Goals
+## 🚀 Future Improvements
 
-This project was built to deeply understand:
-
-* How databases process SQL queries internally
-* How query parsing and execution pipelines work
-* System design using modular architecture
-* Clean object-oriented programming in Java
+* GROUP BY + Aggregation
+* JOIN implementation
+* B+ Tree indexing
+* Query optimization layer
+* Transaction support
 
 ---
 
-# Author
+## 🎯 Learning Outcomes
 
-Kartikeya Gupta
+This project helped in understanding:
+
+* DBMS internal working
+* Query parsing & execution
+* Indexing and optimization
+* File-based storage systems
+* Clean OOP design
+* System design thinking
+
+---
+
+## 👨‍💻 Author
+
+**Kartikeya Gupta**
 Computer Science (AI & DS)
-GL Bajaj Group of Institutions
+GL Bajaj Group of Institution, Mathura

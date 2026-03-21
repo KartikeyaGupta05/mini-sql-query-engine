@@ -31,7 +31,6 @@ public class UpdateQuery implements Query {
         return whereCondition;
     }
 
-
     @Override
     public void accept(QueryExecutor executor) {
         executor.executeUpdate(this);

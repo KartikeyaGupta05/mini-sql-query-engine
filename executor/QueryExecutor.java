@@ -3,6 +3,7 @@ package executor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import query.Condition;
 import query.CreateTableQuery;
@@ -52,11 +53,16 @@ public class QueryExecutor {
         }
         System.out.println();
 
-        List<Row> rows = new ArrayList<>();
-
-        for (Row row : table.getRows()) {
-            if (matches(row, condition, table)) {
-                rows.add(row);
+        List<Row> rows;
+        List<Row> indexedRows = getRowsUsingIndex(condition, table);
+        if (indexedRows != null) {
+            rows = indexedRows;
+        } else {
+            rows = new ArrayList<>();
+            for (Row row : table.getRows()) {
+                if (matches(row, condition, table)) {
+                    rows.add(row);
+                }
             }
         }
 
@@ -96,11 +102,27 @@ public class QueryExecutor {
 
         int updated = 0;
 
-        for (Row row : table.getRows()) {
-            if (matches(row, condition, table)) {
-                row.setValue(columnIndex, newValue);
-                updated++;
+        List<Row> targetRows;
+
+        List<Row> indexedRows = getRowsUsingIndex(condition, table);
+
+        if (indexedRows != null) {
+            targetRows = indexedRows;
+        } else {
+            targetRows = new ArrayList<>();
+
+            for (Row row : table.getRows()) {
+                if (matches(row, condition, table)) {
+                    targetRows.add(row);
+                }
             }
+        }
+
+        for (Row row : targetRows) {
+            table.removeFromIndexes(row);
+            row.setValue(columnIndex, newValue);
+            table.addToIndexes(row);
+            updated++;
         }
         if (updated > 0) {
             table.rewriteFile();
@@ -115,15 +137,26 @@ public class QueryExecutor {
         Condition condition = query.getWhereCondition();
 
         int deleted = 0;
-        Iterator<Row> iterator = table.getRows().iterator();
+        List<Row> targetRows;
 
-        while (iterator.hasNext()) {
-            Row row = iterator.next();
+        List<Row> indexedRows = getRowsUsingIndex(condition, table);
 
-            if (matches(row, condition, table)) {
-                iterator.remove();
-                deleted++;
+        if (indexedRows != null) {
+            targetRows = new ArrayList<>(indexedRows);
+        } else {
+            targetRows = new ArrayList<>();
+
+            for (Row row : table.getRows()) {
+                if (matches(row, condition, table)) {
+                    targetRows.add(row);
+                }
             }
+        }
+
+        for (Row row : targetRows) {
+            table.removeFromIndexes(row);
+            table.getRows().remove(row);
+            deleted++;
         }
         if (deleted > 0) {
             table.rewriteFile();
@@ -165,5 +198,24 @@ public class QueryExecutor {
 
     private boolean matches(Row row, Condition condition, Table table) {
         return condition == null || evaluateCondition(condition, row, table);
+    }
+
+    private List<Row> getRowsUsingIndex(Condition condition, Table table) {
+        if (condition == null || condition.isCompound()) {
+            return null; // Index can only be used for simple conditions
+        }
+
+        if (!condition.getOperator().equals("=")) {
+            return null; // Index can only be used for equality conditions
+        }
+
+        String columnName = condition.getColumnName();
+        Object value = condition.getValue();
+
+        Map<Object, List<Row>> index = table.getIndex(columnName);
+        if (index == null) {
+            return null; // No index on this column
+        }
+        return index.getOrDefault(value, new ArrayList<>());
     }
 }

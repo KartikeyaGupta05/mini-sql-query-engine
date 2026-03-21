@@ -25,6 +25,7 @@ public class Database {
 
         Table newTable = new Table(tableName, columns);
         tables.put(tableName, newTable);
+        newTable.createIndex("id");
 
         try {
             File file = new File("data/" + tableName + ".table");

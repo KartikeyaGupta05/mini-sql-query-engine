@@ -11,7 +11,8 @@ public class SelectQuery implements Query {
     private String orderByColumn;
     private boolean orderByAsc;
 
-    public SelectQuery(String tableName, List<String> selectedColumns, boolean selectAll, Condition whereCondition, String orderByColumn, boolean orderByAsc) {
+    public SelectQuery(String tableName, List<String> selectedColumns, boolean selectAll, Condition whereCondition,
+            String orderByColumn, boolean orderByAsc) {
         this.tableName = tableName;
         this.selectedColumns = selectedColumns;
         this.selectAll = selectAll;

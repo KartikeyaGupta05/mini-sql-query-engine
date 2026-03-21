@@ -46,14 +46,6 @@ public class QueryExecutor {
         }
 
         Condition condition = query.getWhereCondition();
-        boolean hasCondition = condition != null;
-        int conditionIndex = -1;
-        Object conditionValue = null;
-
-        if (hasCondition) {
-            conditionIndex = table.getColumnIndex(condition.getColumnName());
-            conditionValue = condition.getValue();
-        }
 
         for (String col : columns) {
             System.out.print(col + " ");
@@ -63,21 +55,22 @@ public class QueryExecutor {
         List<Row> rows = new ArrayList<>();
 
         for (Row row : table.getRows()) {
-            if (hasCondition) {
-                Object rowValue = row.getValue(conditionIndex);
-                if (!conditionValue.equals(rowValue)) {
-                    continue;
-                }
+            if (matches(row, condition, table)) {
+                rows.add(row);
             }
-            rows.add(row);
         }
 
         if (query.getOrderByColumn() != null) {
             int orderByIndex = table.getColumnIndex(query.getOrderByColumn());
             rows.sort((r1, r2) -> {
-                Comparable v1 = (Comparable) r1.getValue(orderByIndex);
-                Comparable v2 = (Comparable) r2.getValue(orderByIndex);
-                int cmp = v1.compareTo(v2);
+                Object v1 = r1.getValue(orderByIndex);
+                Object v2 = r2.getValue(orderByIndex);
+
+                if (!(v1 instanceof Comparable) || !(v2 instanceof Comparable)) {
+                    throw new RuntimeException("ORDER BY column is not comparable");
+                }
+
+                int cmp = ((Comparable) v1).compareTo(v2);
                 return query.isOrderByAsc() ? cmp : -cmp;
             });
         }
@@ -100,26 +93,14 @@ public class QueryExecutor {
         Object newValue = query.getNewValue();
 
         Condition condition = query.getWhereCondition();
-        boolean hasCondition = condition != null;
-        int conditionIndex = -1;
-        Object conditionValue = null;
 
         int updated = 0;
 
-        if (hasCondition) {
-            conditionIndex = table.getColumnIndex(condition.getColumnName());
-            conditionValue = condition.getValue();
-        }
-
         for (Row row : table.getRows()) {
-            if (hasCondition) {
-                Object rowValue = row.getValue(conditionIndex);
-                if (!conditionValue.equals(rowValue)) {
-                    continue;
-                }
+            if (matches(row, condition, table)) {
+                row.setValue(columnIndex, newValue);
+                updated++;
             }
-            row.setValue(columnIndex, newValue);
-            updated++;
         }
         if (updated > 0) {
             table.rewriteFile();
@@ -132,34 +113,57 @@ public class QueryExecutor {
         Table table = database.getTable(tableName);
 
         Condition condition = query.getWhereCondition();
-        boolean hasCondition = condition != null;
-        int conditionIndex = -1;
-        Object conditionValue = null;
 
         int deleted = 0;
-
-        if (hasCondition) {
-            conditionIndex = table.getColumnIndex(condition.getColumnName());
-            conditionValue = condition.getValue();
-        }
-
         Iterator<Row> iterator = table.getRows().iterator();
 
         while (iterator.hasNext()) {
             Row row = iterator.next();
 
-            if (hasCondition) {
-                Object rowValue = row.getValue(conditionIndex);
-                if (!conditionValue.equals(rowValue)) {
-                    continue;
-                }
+            if (matches(row, condition, table)) {
+                iterator.remove();
+                deleted++;
             }
-            iterator.remove();
-            deleted++;
         }
         if (deleted > 0) {
             table.rewriteFile();
         }
         System.out.println("Deleted " + deleted + " row(s).");
+    }
+
+    private boolean evaluateCondition(Condition condition, Row row, Table table) {
+        if (condition.isCompound()) {
+            boolean leftResult = evaluateCondition(condition.getLeft(), row, table);
+            boolean rightResult = evaluateCondition(condition.getRight(), row, table);
+            if (condition.getLogicalOperator().equalsIgnoreCase("AND")) {
+                return leftResult && rightResult;
+            } else if (condition.getLogicalOperator().equalsIgnoreCase("OR")) {
+                return leftResult || rightResult;
+            } else {
+                throw new RuntimeException("Unsupported logical operator: " + condition.getLogicalOperator());
+            }
+        }
+
+        int columnIndex = table.getColumnIndex(condition.getColumnName());
+        Object rowValue = row.getValue(columnIndex);
+        Object conditionValue = condition.getValue();
+        String op = condition.getOperator();
+        if (!(rowValue instanceof Comparable) || !(conditionValue instanceof Comparable)) {
+            throw new RuntimeException("Values are not comparable");
+        }
+        switch (op) {
+            case "=":
+                return rowValue.equals(conditionValue);
+            case "<":
+                return ((Comparable) rowValue).compareTo(conditionValue) < 0;
+            case ">":
+                return ((Comparable) rowValue).compareTo(conditionValue) > 0;
+            default:
+                throw new RuntimeException("Unsupported operator: " + condition.getOperator());
+        }
+    }
+
+    private boolean matches(Row row, Condition condition, Table table) {
+        return condition == null || evaluateCondition(condition, row, table);
     }
 }

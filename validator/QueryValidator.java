@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import query.Condition;
 import query.CreateTableQuery;
 import query.InsertQuery;
 import query.Query;
@@ -103,13 +104,7 @@ public class QueryValidator {
         }
 
         if (query.getWhereCondition() != null) {
-            String column = query.getWhereCondition().getColumnName();
-            try {
-                table.getColumnIndex(column);
-            } catch (IllegalArgumentException e) {
-                throw new ValidationException(
-                        "Column '" + column + "' in WHERE clause does not exist in table '" + tableName + "'");
-            }
+            validateCondition(query.getWhereCondition(), table, tableName);
         }
 
         if (query.getOrderByColumn() != null) {
@@ -131,7 +126,7 @@ public class QueryValidator {
 
         Table table = database.getTable(tableName);
         String columnToUpdate = query.getColumnName();
-        
+
         int columnIndex;
         try {
             columnIndex = table.getColumnIndex(columnToUpdate);
@@ -145,20 +140,14 @@ public class QueryValidator {
         DataType expectedType = column.getType();
 
         if (expectedType == DataType.INT && !(newValue instanceof Integer)) {
-                throw new ValidationException("Expected INT for column " + column.getName());
-            }
-            if (expectedType == DataType.STRING && !(newValue instanceof String)) {
-                throw new ValidationException("Expected STRING for column " + column.getName());
-            }
+            throw new ValidationException("Expected INT for column " + column.getName());
+        }
+        if (expectedType == DataType.STRING && !(newValue instanceof String)) {
+            throw new ValidationException("Expected STRING for column " + column.getName());
+        }
 
         if (query.getWhereCondition() != null) {
-            String columnName = query.getWhereCondition().getColumnName();
-            try {
-                table.getColumnIndex(columnName);
-            } catch (IllegalArgumentException e) {
-                throw new ValidationException(
-                        "Column '" + columnName + "' in WHERE clause does not exist in table '" + tableName + "'");
-            }
+            validateCondition(query.getWhereCondition(), table, tableName);
         }
     }
 
@@ -171,13 +160,31 @@ public class QueryValidator {
         Table table = database.getTable(tableName);
 
         if (query.getWhereCondition() != null) {
-            String columnName = query.getWhereCondition().getColumnName();
-            try {
-                table.getColumnIndex(columnName);
-            } catch (IllegalArgumentException e) {
-                throw new ValidationException(
-                        "Column '" + columnName + "' in WHERE clause does not exist in table '" + tableName + "'");
-            }
-        }   
+            validateCondition(query.getWhereCondition(), table, tableName);
+        }
+    }
+
+    private void validateCondition(Condition condition, Table table, String tableName)
+            throws ValidationException {
+
+        if (condition.isCompound()) {
+            validateCondition(condition.getLeft(), table, tableName);
+            validateCondition(condition.getRight(), table, tableName);
+            return;
+        }
+
+        String column = condition.getColumnName();
+        String op = condition.getOperator();
+
+        if (!op.equals("=") && !op.equals("<") && !op.equals(">")) {
+            throw new ValidationException("Unsupported operator: " + op);
+        }
+
+        try {
+            table.getColumnIndex(column);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException(
+                    "Column '" + column + "' in WHERE clause does not exist in table '" + tableName + "'");
+        }
     }
 }

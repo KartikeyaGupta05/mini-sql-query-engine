@@ -192,6 +192,9 @@ public class Parser {
             throw new RuntimeException("Cannot select specific columns when using *");
         }
 
+        if (fromIndex + 1 >= tokens.length) {
+            throw new RuntimeException("Missing table name in SELECT query");
+        }
         String tableName = tokens[fromIndex + 1];
         if (tableName.equalsIgnoreCase("WHERE")) {
             throw new RuntimeException("Missing table name in SELECT query");
@@ -243,7 +246,9 @@ public class Parser {
         if (setIndex == -1) {
             throw new RuntimeException("Invalid UPDATE syntax: missing SET");
         }
-
+        if (setIndex + 1 >= tokens.length) {
+            throw new RuntimeException("Missing column in SET clause");
+        }
         String columnName = tokens[setIndex + 1];
 
         if (setIndex + 2 >= tokens.length || !tokens[setIndex + 2].equals("=")) {
@@ -328,16 +333,24 @@ public class Parser {
     }
 
     private Condition parseCondition(String tokens[], int startIndex, int endIndex) {
-        if (endIndex - startIndex < 3) {
-            throw new RuntimeException("Invalid WHERE clause");
+        for (int i = startIndex; i < endIndex; i++) {
+            if (tokens[i].equalsIgnoreCase("AND") || tokens[i].equalsIgnoreCase("OR")) {
+                String logicalOperator = tokens[i].toUpperCase();
+
+                Condition left = parseCondition(tokens, startIndex, i);
+                Condition right = parseCondition(tokens, i + 1, endIndex);
+
+                return new Condition(left, logicalOperator, right);
+            }
         }
-        if (endIndex > startIndex + 3) {
+
+        if (startIndex >= endIndex) {
             throw new RuntimeException("Invalid WHERE clause");
         }
         String columnName = tokens[startIndex];
         String operator = tokens[startIndex + 1];
-        if (!operator.equals("=")) {
-            throw new RuntimeException("Only '=' operator supported in WHERE");
+        if (!operator.equals("=") && !operator.equals("<") && !operator.equals(">")) {
+            throw new RuntimeException("Only '=', '<', and '>' operators supported in WHERE");
         }
         String valueToken = tokens[startIndex + 2];
         Object value = parseLiteral(valueToken);
